@@ -1,9 +1,15 @@
 version: 0.2
+env:
+  parameter-store:
+    DOCKER_USERNAME: "DOCKER_USERNAME"
+    DOCKER_PASSWORD: "DOCKER_PASSWORD"
+    DOCKER_REGISTRY_URL: "DOCKER_REGISTRY_URL"
+
 phases:
   pre_build:
     commands:
       - echo Logging in to Docker Hub...
-      - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+      - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin $DOCKER_REGISTRY_URL
       - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
   build:
     commands:
@@ -11,17 +17,17 @@ phases:
       - echo Building the Jar file
       - mvn clean install
       - echo Building the Docker image...
-      - docker build -t $DOCKER_USERNAME/spring-demo .
-      - docker tag $DOCKER_USERNAME/spring-demo:latest $DOCKER_USERNAME/spring-demo:$IMAGE_TAG
+      - docker build -t $DOCKER_REGISTRY_URL/$DOCKER_USERNAME/spring-demo .
+      - docker tag $DOCKER_REGISTRY_URL/$DOCKER_USERNAME/spring-demo:latest $DOCKER_REGISTRY_URL/$DOCKER_USERNAME/spring-demo:$IMAGE_TAG
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing to Docker Hub...
-      - docker push $DOCKER_USERNAME/spring-demo:latest
-      - docker push $DOCKER_USERNAME/spring-demo:$IMAGE_TAG
+      - docker push $DOCKER_REGISTRY_URL/$DOCKER_USERNAME/spring-demo:latest
+      - docker push $DOCKER_REGISTRY_URL/$DOCKER_USERNAME/spring-demo:$IMAGE_TAG
       - echo Writing image definitions file...
       - DOCKER_CONTAINER_NAME=spring-demo
-      - printf '[{"name":"%s","imageUri":"%s"}]' $DOCKER_CONTAINER_NAME $DOCKER_USERNAME/spring-demo:$IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"%s","imageUri":"%s"}]' $DOCKER_CONTAINER_NAME $DOCKER_REGISTRY_URL/$DOCKER_USERNAME/spring-demo:$IMAGE_TAG > imagedefinitions.json
       - echo $DOCKER_CONTAINER_NAME
       - echo Printing imagedefinitions.json
       - cat imagedefinitions.json

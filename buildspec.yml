@@ -23,4 +23,4 @@ phases:
       - docker push  purushothamareddy/springdemo:1.0 
 artifacts:
   files:
-    - target/springboot-aws-deploy.jar
+     - target/springboot-aws-deploy-service.jar

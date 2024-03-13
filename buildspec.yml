@@ -9,7 +9,7 @@ phases:
     commands:
       - echo Logging in to Docker Hub...
       - DOCKER_PASSWORD=$(aws ssm get-parameter --name DOCKER_PASSWORD --query "Parameter.Value" --output text)
-      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY_URL
+      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD https://index.docker.io/v1/
       - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
   build:
     commands:

@@ -2,14 +2,14 @@ version: 0.2
 env:
   parameter-store:
     DOCKER_USERNAME: "DOCKER_USERNAME"
-    DOCKER_PASSWORD: "DOCKER_PASSWORD"
     DOCKER_REGISTRY_URL: "DOCKER_REGISTRY_URL"
 
 phases:
   pre_build:
     commands:
       - echo Logging in to Docker Hub...
-      - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin $DOCKER_REGISTRY_URL
+      - DOCKER_PASSWORD=$(aws ssm get-parameter --name DOCKER_PASSWORD --query "Parameter.Value" --output text)
+      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY_URL
       - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
   build:
     commands:

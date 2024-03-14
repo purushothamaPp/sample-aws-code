@@ -1,4 +1,4 @@
-FROM public.ecr.aws/l4u2w1n2/purushotham:eclipse-temurin-17-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 RUN apk add curl
 VOLUME /tmp
 EXPOSE 8080

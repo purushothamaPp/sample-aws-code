@@ -2,8 +2,9 @@ version: 0.2
 
 env:
   variables:
-    AWS_ACCOUNT_ID: "992382439605"
     AWS_DEFAULT_REGION: "ap-south-1"
+    AWS_ACCOUNT_ID: "992382439605"
+    ECR_REPO_NAME: "purushotham"  # Replace with your ECR repository name
 
 phases:
   pre_build:
@@ -17,16 +18,17 @@ phases:
       - echo Building the Jar file
       - mvn clean package
       - echo Building the Docker image...
-      - docker build -t purushothamareddy/springdemo:1.0 .
+      - docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:1.0 .
 
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Tagging the Docker image for ECR...
-      - docker tag purushothamareddy/springdemo:1.0 $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/purushotham:1.0
+      - docker tag $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:1.0 $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:latest
       - echo Pushing to Amazon ECR...
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/purushotham:1.0
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:1.0
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:latest
 
 artifacts:
   files:
-     - target/springboot-aws-deploy-service.jar
+    - target/springboot-aws-deploy-service.jar

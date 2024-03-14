@@ -1,36 +1,36 @@
 version: 0.2
-
-env:
-  variables:
-    AWS_DEFAULT_REGION: "ap-south-1"
-    AWS_ACCOUNT_ID: "992382439605"
-    ECR_REPO_NAME: "purushotham"  # Replace with your ECR repository name
-
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-
+      - echo Logging in to Amazon ECR....
+      - aws --version
+      #- $(aws ecr get-login --region ap-south-1 --no-include-email)
+      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 471112750003.dkr.ecr.ap-south-1.amazonaws.com
+      - # Replace with this to your repository URI
+      - REPOSITORY_URI=public.ecr.aws/l4u2w1n2/purushotham
+      - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
   build:
     commands:
       - echo Build started on `date`
-      - echo Building the Jar file
-      - mvn clean package
+      - echo building the Jar file
+      - mvn clean install
       - echo Building the Docker image...
-      - docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:2.0 .
-
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo Tagging the Docker image for ECR...
-      - IMAGE_ID=$(docker images -q $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:2.0)
-      - docker tag $IMAGE_ID $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:2.0
-      - docker tag $IMAGE_ID $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:latest
-      - echo Pushing to Amazon ECR...
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:2.0
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:latest
-
+      - echo pushing to repo
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Writing image definitions file...
+      # Give your container name
+      - DOCKER_CONTAINER_NAME=spring-demo-ecr
+      - printf '[{"name":"%s","imageUri":"%s"}]' $DOCKER_CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - echo $DOCKER_CONTAINER_NAME
+      - echo printing imagedefinitions.json
+      - cat imagedefinitions.json
 artifacts:
   files:
-    - target/springboot-aws-deploy-service.jar
+    - imagedefinitions.json
+    - target/springboot-aws-deploy.jar

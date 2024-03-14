@@ -1,14 +1,16 @@
 version: 0.2
+
 env:
   parameter-store:
-    DOCKER_USERNAME: "DOCKER_USERNAME"
-    DOCKER_REGISTRY_URL: "DOCKER_REGISTRY_URL"
+    AWS_ACCOUNT_ID: "992382439605"
+    AWS_DEFAULT_REGION: "ap-south-1"
 
 phases:
   pre_build:
     commands:
-      - echo Logging in to Docker Hub...
-      - docker login -u purushothamareddy -p 8310465587@Pp
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+
   build:
     commands:
       - echo Build started on `date`
@@ -16,11 +18,15 @@ phases:
       - mvn clean package
       - echo Building the Docker image...
       - docker build -t purushothamareddy/springdemo:1.0 .
+
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo Pushing to Docker Hub...
-      - docker push  purushothamareddy/springdemo:1.0 
+      - echo Tagging the Docker image for ECR...
+      - docker tag purushothamareddy/springdemo:1.0 $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/purushotham:1.0
+      - echo Pushing to Amazon ECR...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/purushotham:1.0
+
 artifacts:
   files:
      - target/springboot-aws-deploy-service.jar
